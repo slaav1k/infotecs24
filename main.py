@@ -40,7 +40,7 @@ df = pd.read_csv(data_path, sep='\t', names=columns, encoding='utf-8')
 @app.route('/city/<int:geonameid>', methods=['GET'])
 def get_city_by_geonameid(geonameid):
     """
-    Метод для получения информации о городе по его идентификатору geonameid
+    Метод для получения информации о городе по его идентификатору geonameid.
     :param geonameid:
     :return: json c информацией
     """
@@ -50,6 +50,10 @@ def get_city_by_geonameid(geonameid):
 
 @app.route('/cities', methods=['GET'])
 def get_cities():
+    """
+    Метод для вывода списка записей со страницы.
+    :return: json c информацией
+    """
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=10, type=int)
     start_index = (page - 1) * per_page
@@ -60,11 +64,16 @@ def get_cities():
 
 @app.route('/compare_cities')
 def compare_cities():
+    """
+    Сравнение двух городов. Ввод на русском. Доп. информация: какой город севереней, разница во временных зонах.
+    :return: json c информацией
+    """
     city1 = request.args.get('city1')
     city2 = request.args.get('city2')
     transliterated_city1 = translit.translify(city1)
     transliterated_city2 = translit.translify(city2)
 
+    # Выбор того города, где больше население
     city1_info = df[df['name'] == transliterated_city1].sort_values(by='population', ascending=False).iloc[0]
     city2_info = df[df['name'] == transliterated_city2].sort_values(by='population', ascending=False).iloc[0]
 
@@ -100,7 +109,11 @@ def compare_cities():
 
 @app.route('/city_by_name/<string:name>', methods=['GET'])
 def city_by_name(name):
-    # Получаем часть названия города, введенную пользователем
+    """
+    Вывод списка городов, которые начинаются на введенную конструкцию.
+    :param name: введенная конструкция.
+    :return: список json
+    """
     name = translit.translify(name)
     filtered_cities = df[df['name'].str.contains(name, na=False)]
 
@@ -114,7 +127,13 @@ def get_list():
 
 
 def _tz_diff(home, away):
-    utcnow = timezone('utc').localize(datetime.utcnow())  # generic time
+    """
+    Перевод временных зон в числовое представление.
+    :param home: Первый город.
+    :param away: Второй город.
+    :return: Разница в часах.
+    """
+    utcnow = timezone('utc').localize(datetime.utcnow())
     here = utcnow.astimezone(timezone(home)).replace(tzinfo=None)
     there = utcnow.astimezone(timezone(away)).replace(tzinfo=None)
 
